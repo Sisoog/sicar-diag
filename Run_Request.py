@@ -3,7 +3,6 @@ from typing import List
 import time
 from datetime import *
 from elm327 import *
-from Calculator import *
 from dataTypes import *
 
 
@@ -317,10 +316,9 @@ class Run_request:
     
     def customCalc_formula(self, str1:str, i:int):
         try:
-            cl = Calculator()
             if "?" in str1.upper():
                 return Run_request.calcFromCondition(str1)
-            return App.roundDouble(float(Calculator.From(str1)), i)
+            return App.roundDouble(float(eval(str1)), i)
         
         except Exception as ex:
             print(ex)
