@@ -1,7 +1,7 @@
 
 from ConnectionManager import *
 from MainCmd import *
-import curses
+from tabulate import tabulate
 from threading import Thread
 
 class LiveParameter:
@@ -75,76 +75,31 @@ class LiveParameter:
     def LiveParamTask(self):
         # Load parameter and start Parameter Updater Task
         self.fillMainCmdList()
-        getLivedataTask = AsyncGetLiveParameter(self, 0.05)
-        getLivedataTask.start()
+        #getLivedataTask = #AsyncGetLiveParameter(self, 0.05)
+        #getLivedataTask.start()
 
-        # Initial show Parameter Pages
-        stdscr = curses.initscr()
-        stdscr.timeout(100)
-        item_start, item_end = 0, 10
 
         while True:
             
             # Update Parameter
-            result = getLivedataTask.result
+            ecu_results = self.GetLiveDataTask() #getLivedataTask.result
 
-            # calculate Page
-            length = len(result)
-            start = start if item_start < 0 or item_start > length else item_start
-            end = length if length < item_end else item_end
-            item_start = start
-            item_end = end if length > 0 and item_end > length else item_end
-            
-            # Show Parameter
-            stdscr.clear()
-            stdscr.addstr(0,0, f"Pages({int(end/10 + bool(end%10))}/{int(length/10 + bool(length%10))})")
-            for i in range(start, end):
-                stdscr.addstr((i-start)+1,0, result[i].cmdDesc)
-                stdscr.addstr((i-start)+1,60, str(result[i].value))
-            stdscr.refresh()
+            titles = []
+            results = []
+            for res in ecu_results:
+                titles.append(res.cmdDesc)
+                results.append(res.value)
+              
+            # Combine titles and results into a list of rows
+            data = list(zip(titles, results))
 
-            # Check Push Any Key
-            try:
-                c = stdscr.getkey()
-                curses.endwin()
-                if c == '1':
-                    item_start += 10
-                    item_end += 10
+            print("\r\n")
+            print(tabulate(data,headers=["Title", "Result"], tablefmt="grid",showindex="always"))
 
-                elif c == '2':
-                    item_start -= 10
-                    item_end -= 0 if item_start < 0 else (end - start)
-                else:
-                    getLivedataTask.exitFlag = True
-                    break
-            except curses.error:
-                pass
+            break
 
-        # Kill Task Updater Parameter
-        getLivedataTask.join()
 
     def __init__(self, params):
         self.params = params
         self.mnotes:List[StructNote_MainCmd] = []
         self.Rsp:List[Response] = []
-
-
-# custom thread
-class AsyncGetLiveParameter(Thread):
-    # constructor
-    def __init__(self, LiveParam:LiveParameter, periodTime:float):
-        # execute the base constructor
-        Thread.__init__(self)
-        # set a default value
-        self.liveparameter = LiveParam
-        self.result:List[Response] = []
-        self.exitFlag = False
-        self.timeout = periodTime
- 
-    # function executed in a new thread
-    def run(self):
-        while not self.exitFlag:
-            self.result = self.liveparameter.GetLiveDataTask()
-
-            # block for a moment
-            time.sleep(self.timeout)
