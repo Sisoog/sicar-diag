@@ -536,10 +536,7 @@ class Run_request:
                 responce = next
         return responce
 
-    def exe_cmd_2(self, arrayList:List[Request], Bool:bool):
-        return self.exe_cmd(arrayList, Bool, False)
-
-    def exe_cmd(self, arrayList : List[Request], Bool, z):
+    def exe_cmd(self, arrayList : List[Request], Bool):
         arrayList2:List[Response] = []
 
         for request in arrayList:
@@ -621,7 +618,6 @@ class Run_request:
                 responce.cmd_group_id = request.cmd_group_id
 
                 arrayList2.append(responce)
-                z = z or request.cmd_type == Commandtype.cmd_Opr_RespIsImportant_39
 
         return arrayList2                   
 

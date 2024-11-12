@@ -77,7 +77,7 @@ class ConnectionManager:
 
         return arraylist
 
-    def Run_Init_Cmd(self, z):
+    def Run_Init_Cmd(self):
         z2 : bool = False
         i3 : int = 0
 
@@ -91,10 +91,9 @@ class ConnectionManager:
         if True:
             print("Run_Init_Cmd_1")
 
-            if app.f148un.eid != app.f148un._eid or z or ConnectionManager.haveTypeW() or app.f148un.cahngeBaud:
-                app.f148un._eid = app.f148un.eid
+            if ConnectionManager.haveTypeW() or app.f148un.cahngeBaud:
                 app.f148un.cahngeBaud = False
-                arrayList = run_Request.exe_cmd(app.f148un.getDeviceSetupCmd(), False, False == False)
+                arrayList = run_Request.exe_cmd(app.f148un.getDeviceSetupCmd(), False)
                 z2 = True
                 for responce in arrayList:
                     z2 = responce.success
@@ -104,7 +103,7 @@ class ConnectionManager:
             if z2 == False:
                 i3 = 0
             else:
-                arrayList = run_Request.exe_cmd(self.getCmdArrayList(self.initCmd),False,False)
+                arrayList = run_Request.exe_cmd(self.getCmdArrayList(self.initCmd),False)
                 z2 = True
                 for responce in arrayList:
                     z2 = responce.success
@@ -130,23 +129,15 @@ class ConnectionManager:
             # Assuming G.un.getCloseCmd() returns a string command to be executed
             run_request = Run_request()
             command = app.f148un.getCloseCmd()
-            responce_ForCommand = run_request.exe_cmd_2(command, False)
+            responce_ForCommand = run_request.exe_cmd(command, False)
             if App.checkSuccessRsp(responce_ForCommand):
                 app.f148un.STS = "00"
             app.f148un.forceJobCancel = True
         except Exception as e:
             print(f"An error occurred: {str(e)}")
 
-    def execute_TryConnect(self, z, z2):
-
-        if z:
-            try:
-                ConnectionManager.runCloseSessionCmd()
-            except Exception as ex:
-                print(ex)
-                return False
-        
-        flag = self.Run_Init_Cmd(z2) == 1
+    def execute_TryConnect(self):        
+        flag = self.Run_Init_Cmd() == 1
         return flag
     
     def __init__(self, specs, initCmd, wakeupCmd, reinitCmd):

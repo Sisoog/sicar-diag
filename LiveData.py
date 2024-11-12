@@ -58,7 +58,7 @@ class LiveParameter:
         for it in self.mnotes:
             next:StructNote_MainCmd = it
             run_Request = Run_request()
-            exe_cmd:List[Response] = run_Request.exe_cmd_2(next.cmd_list, False)
+            exe_cmd:List[Response] = run_Request.exe_cmd(next.cmd_list, False)
             self.Rsp = exe_cmd
             z = False
             for it2 in exe_cmd:
