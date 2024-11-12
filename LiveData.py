@@ -2,8 +2,8 @@
 from ConnectionManager import *
 from MainCmd import *
 from tabulate import tabulate
-from threading import Thread
-
+from bidi.algorithm import get_display
+import arabic_reshaper
 class LiveParameter:
 
     def getCmdArrayList(self, array):
@@ -73,30 +73,24 @@ class LiveParameter:
         return valid_responce
 
     def LiveParamTask(self):
-        # Load parameter and start Parameter Updater Task
+
         self.fillMainCmdList()
-        #getLivedataTask = #AsyncGetLiveParameter(self, 0.05)
-        #getLivedataTask.start()
 
+        # Update Parameter
+        ecu_results = self.GetLiveDataTask() #getLivedataTask.result
 
-        while True:
+        titles = []
+        results = []
+        for res in ecu_results:
+            cmd_text = get_display(arabic_reshaper.reshape(res.cmdDesc))
+            titles.append(cmd_text)
+            results.append(res.value)
             
-            # Update Parameter
-            ecu_results = self.GetLiveDataTask() #getLivedataTask.result
+        # Combine titles and results into a list of rows
+        data = list(zip(titles, results))
 
-            titles = []
-            results = []
-            for res in ecu_results:
-                titles.append(res.cmdDesc)
-                results.append(res.value)
-              
-            # Combine titles and results into a list of rows
-            data = list(zip(titles, results))
-
-            print("\r\n")
-            print(tabulate(data,headers=["Title", "Result"], tablefmt="grid",showindex="always"))
-
-            break
+        print("\r\n")
+        print(tabulate(data,headers=["Title", "Result"], tablefmt="grid",showindex="always"))
 
 
     def __init__(self, params):
