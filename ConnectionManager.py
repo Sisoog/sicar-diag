@@ -17,25 +17,26 @@ class ConnectionManager:
         return 0
 
     def getEcuInfo(self):
+        # TODO - Remove Used Fild in Json
         app.f148un.wakeupTiming = App.to_int(self.specs["wakeupTiming"])
         app.f148un.reInitTiming = App.to_int(self.specs["reInitTiming"])
         app.f148un.f160d = str(self.specs["d"])
-        app.f148un.f159c = App.to_int(self.specs["c"])
+        #app.f148un.f159c = App.to_int(self.specs["c"])
         app.f148un.type = int(self.specs["type"])
         app.f148un.typeW = str(self.specs["typew"])
         app.f148un.f161dw = str(self.specs["dw"])
-        app.f148un.f162p = int(self.specs["p"])
-        app.f148un.f164wt = int(self.specs["wt"])
+        #app.f148un.f162p = int(self.specs["p"])
+        #app.f148un.f164wt = int(self.specs["wt"])
         app.f148un.f163wc = str(self.specs["wc"])
-        app.f148un.t74 = int(self.specs["t74"])
-        app.f148un.t65 = int(self.specs["t65"])
-        app.f148un.Sou = int(self.specs["s"])
+        #app.f148un.t74 = int(self.specs["t74"])
+        #app.f148un.t65 = int(self.specs["t65"])
+        #app.f148un.Sou = int(self.specs["s"])
         app.f148un.baudType = int(self.specs["baudtype"])
 
         if str(self.specs["attribute"]) != "":
-            app.f148un.baudRate = app.GetIntFormBracket(str(self.specs["attribute"]), "BR")
+            #app.f148un.baudRate = app.GetIntFormBracket(str(self.specs["attribute"]), "BR")
             app.f148un.initTry = app.GetIntFormBracket(str(self.specs["attribute"]), "IT")
-            app.f148un.attribute = str(self.specs["attribute"])
+            #app.f148un.attribute = str(self.specs["attribute"])
 
     def getCmdArrayList(self, array):
         arraylist = []
@@ -69,9 +70,7 @@ class ConnectionManager:
             request.deviceTimeDelay = app.GetIntFormBracket(App.to_str(row["format"]), "DTD")
             request.MultiLine = "MTLINE" in App.to_str(row["format"])
             request.Attribute = App.to_str(row["format"])
-            if request.isporp > 0:
-                pass
-                # request.cmd_proplist = self.get_CmdPropList(request.unitid, "", App)
+
             arraylist.append(request)
 
         return arraylist
