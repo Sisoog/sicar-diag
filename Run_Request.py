@@ -545,19 +545,14 @@ class Run_request:
                 request.cmd_formula = Run_request.removeNotValidChr(request.cmd_formula)
                 Address = app.f148un.getAddress(request.cmd_text)
                 if request.cmd_text.upper().find("ATZ") > 0 or request.cmd_text.upper().find("ATD") > 0 or request.cmd_text.upper().find("ATWS") > 0:
-                    uInfo : f148un = app.f148un
                     f148un.LastEcuAddress = ""
                 if not f148un.IsForDevice(request.cmd_text):
                     if not app.f148un.IsCanProtocol() and not Address == "" and app.f148un.eid != 1 and not app.f148un.is9141():
-                        uInfo2 = app.f148un
                         if f148un.LastEcuAddress != app.f148un.getHeaderAddress(request.cmd_text):
-                            uInfo3 = app.f148un
                             f148un.LastEcuAddress = app.f148un.getHeaderAddress(request.cmd_text)
-                            uInfo4 = app.f148un
                             Run_request.Exec_Cmd(f148un.getCmdReq(request, ("AT SH" + " " + app.f148un.getHeaderAddress(request.cmd_text)), "OK", 50, "" ))
 
                             if app.f148un.reInitTiming > 0 and request.cmd_type != Commandtype.cmd_InitCommunication and (App.getDateTime().timestamp() - App.lastExecuteCmdTime.timestamp()) >= app.f148un.reInitTiming:
-                                uInfo5 = app.f148un
                                 for request in f148un.reIntCmdList:
                                     Run_request.Exec_Cmd(request)
 

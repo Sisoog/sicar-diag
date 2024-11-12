@@ -38,9 +38,7 @@ class LiveParameter:
             request.deviceTimeDelay = app.GetIntFormBracket(App.to_str(row["format"]), "DTD")
             request.MultiLine = "MTLINE" in App.to_str(row["format"])
             request.Attribute = App.to_str(row["format"])
-            if request.isporp > 0:
-                pass
-                # request.cmd_proplist = self.get_CmdPropList(request.unitid, "", App)
+
             arraylist.append(request)
 
         return arraylist
