@@ -481,8 +481,6 @@ class Run_request:
             except Exception as ex:
                 print(ex)
 
-            if app.f148un.forceJobCancel:
-                break
         return responce
 
     def Exec_Cmd_try(request:Request):
@@ -540,8 +538,8 @@ class Run_request:
         for request in arrayList:
             responce = Response()
 
-            if app.f148un.forceJobCancel:
-                print(f"force job cancel Run_Request {app.f148un.forceJobCancel} ")
+            if False:
+                pass
             else:
                 request.cmd_text = Run_request.removeNotValidChr(request.cmd_text)
                 request.cmd_formula = Run_request.removeNotValidChr(request.cmd_formula)

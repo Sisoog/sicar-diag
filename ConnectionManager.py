@@ -1,6 +1,5 @@
 from app_Info import *
 from Run_Request import *
-
 import OCMD
 
 class ConnectionManager:
@@ -81,9 +80,6 @@ class ConnectionManager:
         z2 : bool = False
         i3 : int = 0
 
-        app.f148un.forceJobCancel = False
-        print(f"----------forceJobCancel Run_Init_Cmd {str(app.f148un.forceJobCancel)}----------")
-
         self.getEcuInfo()
         run_Request = Run_request()
         arrayList : List[Response]
@@ -132,7 +128,6 @@ class ConnectionManager:
             responce_ForCommand = run_request.exe_cmd(command, False)
             if App.checkSuccessRsp(responce_ForCommand):
                 app.f148un.STS = "00"
-            app.f148un.forceJobCancel = True
         except Exception as e:
             print(f"An error occurred: {str(e)}")
 

@@ -1,8 +1,6 @@
 from ConnectionManager import *
 from LiveData import *
-
 import argparse
-from signal import signal, SIGINT
 from sys import exit
 from queue import Queue
 import json
