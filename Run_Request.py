@@ -137,11 +137,11 @@ class Run_request:
                 return str(response.value)
         return "0"
 
-    def make_expression_WithCID(array_list, Str:str):
-        length = len(Str.split("CID"))
+    def make_expression_WithPIDOF(array_list, Str:str):
+        length = len(Str.split("PIDOF"))
         for i in range(length):
-            GetIndexFormFormula = App.GetIndexFormFormula(Str, "CID")
-            Str = Str.replace("CID[" + str(GetIndexFormFormula) + "]", Run_request.getValueFromReqList(GetIndexFormFormula, array_list))
+            GetIndexFormFormula = App.GetIndexFormFormula(Str, "PIDOF")
+            Str = Str.replace("PIDOF[" + str(GetIndexFormFormula) + "]", Run_request.getValueFromReqList(GetIndexFormFormula, array_list))
         return Str
 
     # Replace var with real var from array
@@ -154,8 +154,8 @@ class Run_request:
                 break
             substring = Str[indexOf:Run_request.customGetEndBTagIndex(indexOf, Str)]
             Str = Str.replace(substring, Run_request.customGetValueExp(substring, Str2, commandtype))
-        if App.GetIndexFormFormula(Str, "CID") > 0:
-            Str = Run_request.make_expression_WithCID(arrayList, Str)
+        if App.GetIndexFormFormula(Str, "PIDOF") > 0:
+            Str = Run_request.make_expression_WithPIDOF(arrayList, Str)
         return Str
 
 
@@ -255,8 +255,8 @@ class Run_request:
             substring = FormulaValue[indexOf:Run_request.GetEndBTagIndex(indexOf, FormulaValue)]
             FormulaValue = FormulaValue.replace(substring, Run_request.getValueExp_2(substring, respValue))
         
-        if App.GetIndexFormFormula(FormulaValue, "CID") > -1:
-            FormulaValue = Run_request.make_expression_WithCID(arralist, FormulaValue)
+        if App.GetIndexFormFormula(FormulaValue, "PIDOF") > -1:
+            FormulaValue = Run_request.make_expression_WithPIDOF(arralist, FormulaValue)
         
         FormulaValue = Run_request.getValueFromCondition(FormulaValue, respValue)
         return FormulaValue
