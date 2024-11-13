@@ -50,22 +50,3 @@ class Commandtype(Enum):
 class SubCmdType(Enum):
     cmd_Main = 0,
     cmd_SubMain = 1
-
-SwitchMap_Commandtype = {
-    Commandtype.cmd_TextStr : 1,
-    Commandtype.cmd_Condition_42: 2,
-    Commandtype.cmd_ReadHex_12 : 3,
-    Commandtype.cmd_PramReplaceText_11 : 4,
-    Commandtype.cmd_ReadChar_09 : 5,
-    Commandtype.cmd_ReadAlphabetWithIndex_33 : 6,
-    Commandtype.cmd_SingleDecimal_28 : 7,
-    Commandtype.cmd_GetValue_Configuration_14 : 8,
-    Commandtype.cmd_AvgParam : 9,
-    Commandtype.cmd_Param_2 : 10,
-    Commandtype.cmd_AllDecimal_13 : 11,
-}
-
-SwitchMap_SubCmdType = {
-    SubCmdType.cmd_Main: 1,
-    SubCmdType.cmd_SubMain: 2,
-}

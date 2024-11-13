@@ -4,7 +4,8 @@ import time
 from datetime import *
 from elm327 import *
 from dataTypes import *
-
+import logging
+logger = logging.getLogger(__name__)
 
 
 class Run_request:
@@ -143,11 +144,8 @@ class Run_request:
             Str = Str.replace("CID[" + str(GetIndexFormFormula) + "]", Run_request.getValueFromReqList(GetIndexFormFormula, array_list))
         return Str
 
+    # Replace var with real var from array
     def make_expression(Str:str, Str2:str, commandtype, arrayList):
-        return Run_request.customMake_expression(Str, Str2, commandtype, arrayList)
-
-    
-    def customMake_expression(Str:str, Str2:str, commandtype, arrayList):
         length = len(Str.split("B"))
         for i in range(length):
             Str = Str.replace(" ", "")
@@ -519,7 +517,7 @@ class Run_request:
             return responce
         
         responce_show = Run_request.Exec_Cmd_try(cmdText)
-        print(f"CMD[{cmdText.cmd_text}]\tRESPONCE[{responce_show.value}]\tTIMEOUT[{cmdText.cmd_time_delay}ms]\tSTATE[{responce_show.success}]")
+        logger.debug(f"CMD[{cmdText.cmd_text}]\tRESPONCE[{responce_show.value}]\tTIMEOUT[{cmdText.cmd_time_delay}ms]\tSTATE[{responce_show.success}]")
         return responce_show
 
     def removeNotValidChr(Str : str):
@@ -537,78 +535,77 @@ class Run_request:
 
         for request in arrayList:
             responce = Response()
+            
+            request.cmd_text = Run_request.removeNotValidChr(request.cmd_text)
+            request.cmd_formula = Run_request.removeNotValidChr(request.cmd_formula)
+            Address = app.f148un.getAddress(request.cmd_text)
+            if request.cmd_text.upper().find("ATZ") > 0 or request.cmd_text.upper().find("ATD") > 0 or request.cmd_text.upper().find("ATWS") > 0:
+                f148un.LastEcuAddress = ""
+            if not f148un.IsForDevice(request.cmd_text):
+                if not app.f148un.IsCanProtocol() and not Address == "" and app.f148un.eid != 1 and not app.f148un.is9141():
+                    if f148un.LastEcuAddress != app.f148un.getHeaderAddress(request.cmd_text):
+                        f148un.LastEcuAddress = app.f148un.getHeaderAddress(request.cmd_text)
+                        Run_request.Exec_Cmd(f148un.getCmdReq(request, ("AT SH" + " " + app.f148un.getHeaderAddress(request.cmd_text)), "OK", 50, "" ))
 
-            if False:
-                pass
-            else:
-                request.cmd_text = Run_request.removeNotValidChr(request.cmd_text)
-                request.cmd_formula = Run_request.removeNotValidChr(request.cmd_formula)
-                Address = app.f148un.getAddress(request.cmd_text)
-                if request.cmd_text.upper().find("ATZ") > 0 or request.cmd_text.upper().find("ATD") > 0 or request.cmd_text.upper().find("ATWS") > 0:
-                    f148un.LastEcuAddress = ""
-                if not f148un.IsForDevice(request.cmd_text):
-                    if not app.f148un.IsCanProtocol() and not Address == "" and app.f148un.eid != 1 and not app.f148un.is9141():
-                        if f148un.LastEcuAddress != app.f148un.getHeaderAddress(request.cmd_text):
-                            f148un.LastEcuAddress = app.f148un.getHeaderAddress(request.cmd_text)
-                            Run_request.Exec_Cmd(f148un.getCmdReq(request, ("AT SH" + " " + app.f148un.getHeaderAddress(request.cmd_text)), "OK", 50, "" ))
+                        if app.f148un.reInitTiming > 0 and request.cmd_type != Commandtype.cmd_InitCommunication and (App.getDateTime().timestamp() - App.lastExecuteCmdTime.timestamp()) >= app.f148un.reInitTiming:
+                            for request in f148un.reIntCmdList:
+                                Run_request.Exec_Cmd(request)
 
-                            if app.f148un.reInitTiming > 0 and request.cmd_type != Commandtype.cmd_InitCommunication and (App.getDateTime().timestamp() - App.lastExecuteCmdTime.timestamp()) >= app.f148un.reInitTiming:
-                                for request in f148un.reIntCmdList:
-                                    Run_request.Exec_Cmd(request)
-
-                i : int = SwitchMap_SubCmdType[request.cmd_SMain]
-                if i == 1:
+            
+            if request.cmd_SMain == SubCmdType.cmd_Main:
+                responce = Run_request.Exec_Cmd(request)
+            elif request.cmd_SMain == SubCmdType.cmd_SubMain:
+                if Bool == True:
                     responce = Run_request.Exec_Cmd(request)
-                elif i == 2:
-                    if Bool == True:
-                        responce = Run_request.Exec_Cmd(request)
-                    else:
-                        mainRespInArray = Run_request.getMainRespInArray(arrayList2)
-                        responce.success = mainRespInArray.success
-                        responce.mainValue = mainRespInArray.mainValue
+                else:
+                    mainRespInArray = Run_request.getMainRespInArray(arrayList2)
+                    responce.success = mainRespInArray.success
+                    responce.mainValue = mainRespInArray.mainValue
+            
+            
+            #logger.debug(f"{request.cmd_formula} --> {request.cmd_Desc}")
+            
+            responce.formula = request.cmd_formula
+            responce.cmd_type = request.cmd_type
+            responce.cmdText = request.cmd_text
+            responce.cmdDesc = request.cmd_Desc
+            responce.cmdHeader = request.cmd_header
+            responce.cmd_SubMainType = request.cmd_SMain
+            
+            if responce.success:
+                try:
 
-                responce.formula = request.cmd_formula
-                responce.cmd_type = request.cmd_type
-                responce.cmdText = request.cmd_text
-                responce.cmdDesc = request.cmd_Desc
-                responce.cmdHeader = request.cmd_header
-                responce.cmd_SubMainType = request.cmd_SMain
-                
-                if responce.success:
-                    try:
-                        typeCmd = SwitchMap_Commandtype[request.cmd_type]
+                    if request.cmd_type == Commandtype.cmd_TextStr:
+                        responce.value = request.cmd_formula
+                    elif request.cmd_type == Commandtype.cmd_Condition_42:
+                        responce.value = Run_request.make_expression(request.cmd_formula, responce.mainValue, request.cmd_type, arrayList2)
+                    elif request.cmd_type == Commandtype.cmd_ReadHex_12:
+                        responce.value = Run_request.ReadValueFromHex(request, responce.mainValue)
+                    elif request.cmd_type == Commandtype.cmd_PramReplaceText_11:
+                        responce.value = responce.mainValue.replace(request.cmd_formula, "")
+                    elif request.cmd_type in [Commandtype.cmd_ReadChar_09, Commandtype.cmd_ReadAlphabetWithIndex_33, Commandtype.cmd_SingleDecimal_28]:
+                        responce.value = Run_request.make_expression(request.cmd_formula, responce.mainValue, request.cmd_type, arrayList2)
+                    elif request.cmd_type in [Commandtype.cmd_GetValue_Configuration_14, Commandtype.cmd_AvgParam, Commandtype.cmd_Param_2, Commandtype.cmd_AllDecimal_13]:
+                        if not request.cmd_formula == "":
+                            responce.value = self.calc_formula(Run_request.make_expression(request.cmd_formula, responce.mainValue, request.cmd_type, arrayList2), request.cmd_decmin)
+                            responce.netValue = responce.value
+                            if request.isporp == 1:
+                                responce.value = Run_request.getCmdPropName(request.cmd_proplist, App.to_int(responce.value))
+                            if request.cmd_type == Commandtype.cmd_AvgParam.value:
+                                responce.value = Run_request.getCmdPropName(request.cmd_proplist, App.to_int(responce.value))
+                                pass
+                    App.lastExecuteCmdTime = App.getDateTime()
 
-                        if typeCmd == 1:
-                            responce.value = request.cmd_formula
-                        elif typeCmd == 2:
-                            responce.value = Run_request.make_expression(request.cmd_formula, responce.mainValue, request.cmd_type, arrayList2)
-                        elif typeCmd == 3:
-                            responce.value = Run_request.ReadValueFromHex(request, responce.mainValue)
-                        elif typeCmd == 4:
-                            responce.value = responce.mainValue.replace(request.cmd_formula, "")
-                        elif typeCmd in [5, 6, 7]:
-                            responce.value = Run_request.make_expression(request.cmd_formula, responce.mainValue, request.cmd_type, arrayList2)
-                        elif typeCmd in [8, 9, 10, 11]:
-                            if not request.cmd_formula == "":
-                                responce.value = self.calc_formula(Run_request.make_expression(request.cmd_formula, responce.mainValue, request.cmd_type, arrayList2), request.cmd_decmin)
-                                responce.netValue = responce.value
-                                if request.isporp == 1:
-                                    responce.value = Run_request.getCmdPropName(request.cmd_proplist, App.to_int(responce.value))
-                                if request.cmd_type == Commandtype.cmd_AvgParam.value:
-                                    responce.value = Run_request.getCmdPropName(request.cmd_proplist, App.to_int(responce.value))
-                                    pass
-                        App.lastExecuteCmdTime = App.getDateTime()
+                except Exception as ex:
+                    pass
+            
+            responce.cmd_id = request.cmd_id
+            responce.unit_sim = request.cmd_unit_sim
+            responce.min = request.cmd_min
+            responce.max = request.cmd_max
+            responce.cmd_group_id = request.cmd_group_id
 
-                    except Exception as ex:
-                        pass
-                
-                responce.cmd_id = request.cmd_id
-                responce.unit_sim = request.cmd_unit_sim
-                responce.min = request.cmd_min
-                responce.max = request.cmd_max
-                responce.cmd_group_id = request.cmd_group_id
-
-                arrayList2.append(responce)
+            arrayList2.append(responce)
 
         return arrayList2                   
 

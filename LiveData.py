@@ -1,7 +1,6 @@
 
 from ConnectionManager import *
 from MainCmd import *
-from tabulate import tabulate
 from bidi.algorithm import get_display
 import arabic_reshaper
 class LiveParameter:
@@ -88,9 +87,7 @@ class LiveParameter:
             
         # Combine titles and results into a list of rows
         data = list(zip(titles, results))
-
-        print("\r\n")
-        print(tabulate(data,headers=["Title", "Result"], tablefmt="grid",showindex="always"))
+        return data
 
 
     def __init__(self, params):

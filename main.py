@@ -4,6 +4,9 @@ import argparse
 from sys import exit
 from queue import Queue
 import json
+import logging
+from tabulate import tabulate
+logger = logging.getLogger(__name__)
 
 
 ############################ Argument Difinition ############################
@@ -34,19 +37,26 @@ class Adapter:
             port = serial.Serial(port=serial_port, baudrate=38400, bytesize=8, parity='N', stopbits=1)
             elm327_port.port = port
         except Exception as ex:
-            print(ex)
+            logger.error(ex)
             exit(0)
 
     def connect(self):
+        logger.debug("Try Connect to ECU")
         if self.Cm.execute_TryConnect():
+            logger.debug("Connect OK.")
             return True
+        logger.debug("can not connect to ECU")
         return False
     
     def disconnect(self):
         ConnectionManager.runCloseSessionCmd()
 
     def monitorParameter(self):
-        self.liveParm.LiveParamTask()
+        logger.debug("Read ECU Parameter")
+        data = self.liveParm.LiveParamTask()
+
+        print("\r\n")
+        print(tabulate(data,headers=["Title", "Result"], tablefmt="grid",showindex="always"))
 ############################ Class Difinition ############################
 
 
@@ -54,13 +64,16 @@ class Adapter:
 def main():
     
     # Load ECU Data
+    logger.info("Try Load ECU Config From Jsom")
     f = open(configFile, "r")
     config = json.loads(f.read())
     f.close()
-    
+    logger.info("ECU data Loaded.")
+
     adapter = Adapter(config)
     adapter.connect()
     adapter.monitorParameter()
     
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     main()  

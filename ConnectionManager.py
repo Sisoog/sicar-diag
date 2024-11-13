@@ -1,6 +1,8 @@
 from app_Info import *
 from Run_Request import *
 import OCMD
+import logging
+logger = logging.getLogger(__name__)
 
 class ConnectionManager:
 
@@ -84,7 +86,7 @@ class ConnectionManager:
         arrayList : List[Response]
 
         if True:
-            print("Run_Init_Cmd_1")
+            logger.debug("Run Init ECU CMD")
 
             if ConnectionManager.haveTypeW() or app.f148un.cahngeBaud:
                 app.f148un.cahngeBaud = False
