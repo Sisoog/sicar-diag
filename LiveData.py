@@ -50,9 +50,11 @@ class LiveParameter:
             structNote_MainCmd.cmd_list = self.getCmdArrayList(self.params[group])
             self.mnotes.append(structNote_MainCmd)
 
-    def GetLiveDataTask(self):
+    def Read_LiveData(self):
+        
         valid_responce:List[Response] = []
         mnotes_temp:List[StructNote_MainCmd] = []
+
         for it in self.mnotes:
             next:StructNote_MainCmd = it
             run_Request = Run_request()
@@ -75,7 +77,7 @@ class LiveParameter:
         self.fillMainCmdList()
 
         # Update Parameter
-        ecu_results = self.GetLiveDataTask() #getLivedataTask.result
+        ecu_results = self.Read_LiveData()
 
         titles = []
         results = []

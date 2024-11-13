@@ -291,13 +291,13 @@ class f148un:
 
     def __init__(self):
         self.Sou = 0
-        self._eid = 0
+        #self._eid = 0
         self.baudRate = 0
         self.baudType = 0
         self.cahngeBaud = False
         self.deviceVersion = ""
         self.fileName = ""
-        self.forceJobCancel = False
+        #self.forceJobCancel = False
         self.historyId = 0
         self.initTry = 0
         self.init_group_id = 0
