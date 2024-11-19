@@ -1,5 +1,5 @@
 ### Quick start
 
 ```
-python3 diagSim.py
+python3 main.py
 ```
