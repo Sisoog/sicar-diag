@@ -8,6 +8,78 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def calc_equation(hex_string: str, equation: str, commandtype:Commandtype , PIDs, Round:int) -> float:
+    """
+    Args:
+        hex_string (str): Space-separated hexadecimal values
+        equation (str): Equation using B[index] for bytes and b[index] for bits
+        
+    Returns:
+        float: Result of the calculation
+    """
+
+    hex_values = hex_string.strip().split()
+    bytes_array = [int(x, 16) for x in hex_values]
+    
+
+    def get_bit(byte_array, bit_index):
+        byte_position = bit_index // 8
+        bit_position = bit_index % 8
+        if byte_position >= len(byte_array):
+            raise ValueError(f"Bit index {bit_index} is out of range")
+        return 1 if (byte_array[byte_position] & (1 << bit_position)) else 0
+    
+
+    def replace_ternary(equation: str) -> str:
+        if '?' in equation and ':' in equation:
+            condition, rest = equation.split('?', 1)
+            true_value, false_value = rest.split(':', 1)
+            return f"({true_value.strip()} if {condition.strip()} else {false_value.strip()})"
+        return equation
+    
+
+    def prepare_equation(eq: str) -> str:
+        eq = replace_ternary(eq)
+        
+        eq = eq.replace('&', ' & ')
+        eq = eq.replace('|', ' | ')
+        eq = eq.replace('^', ' ^ ')
+        eq = eq.replace('<<', ' << ')
+        eq = eq.replace('>>', ' >> ')
+        
+        return eq
+    
+    byte_replacements = {}
+    
+    # Byte processing 
+    byte_patterns = re.findall(r'B\[(\d+)\]', equation)
+    for index in byte_patterns:
+        index = int(index)
+        if index < len(bytes_array):
+            byte_replacements[f'B[{index}]'] = str(bytes_array[index-1])
+
+    pid_replacements = {}
+
+    #pid processing 
+    pid_patterns = re.findall(r'PIDOF\[(\d+)\]', equation)
+    for index in pid_patterns:
+        index = int(index)
+        if index < len(PIDs):
+            pid_replacements[f'PIDOF[{index}]'] = str(PIDs[index-1])
+
+
+    calculated_equation = prepare_equation(equation)
+    for key, value in byte_replacements.items():
+        calculated_equation = calculated_equation.replace(key, value)
+    
+
+    try:
+        result = eval(calculated_equation)
+        return round(float(result), Round)
+    except Exception as e:
+        print(str(e))
+
+
 class Run_request:
     def GetEndBTagIndex(i, Str:str):
         strArr = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "[", "]", "B", "O", "C"]
@@ -158,7 +230,6 @@ class Run_request:
             Str = Run_request.make_expression_WithPIDOF(arrayList, Str)
         return Str
 
-
     def getValueExp_2(substring:str, inputValue:str):
         inputValue_Arr = inputValue.split(" ")
         strArr = substring.split("B")
@@ -197,70 +268,6 @@ class Run_request:
                 bin_split[i] = "1" if bin_split[i] == "1" else "0"
         result = "".join(bin_split)
         return result
-
-    def getValueFromCondition(condition:str, inputValue:str):
-        condition = condition.lower()
-        if "case" in condition:
-            coundition_list = condition[4:].split("when")[1:]
-            for cond in coundition_list:
-                cond = cond.replace('¶', '').replace(' ', '')
-                indexThen = cond.find("then")
-                indexElse = cond.find("else")
-                indexEnd = cond.find("end")
-                cound = cond[0:indexThen]
-                
-                for i in range(len(cound)):
-                    c = ord(cound[i])
-                    if c == 60 or c == 61 or c == 62:
-                        break
-                cound_SL = cound[0:i]
-                cound = cound[i:]
-
-                i = 0
-                for i in range(len(cound)):
-                    c = ord(cound[i])
-                    if c == 60 or c == 61 or c == 62:
-                        i += 1
-                        break
-                cound_OP = cound[0:i]
-                cound = cound[i:]
-                cound_SR = cound
-
-                if cound_OP == "=":
-                    cound_OP = "=="
-
-                instruction_else = '\"\"'
-                if indexElse > -1:
-                    instruction_then = cond[(indexThen+4): indexElse]
-                    instruction_else = cond[(indexElse+4): indexEnd]
-                elif indexEnd > -1:
-                    instruction_then = cond[(indexThen+4): indexEnd]
-
-                else:
-                    instruction_then = cond[(indexThen+4):]
-
-                result = str(eval(instruction_then + "if " + cound_SL+cound_OP+cound_SR + "else " + instruction_else))
-                if result == str(eval(instruction_then)) or result == str(eval(instruction_else)) and result != '':
-                    return result       
-        return condition
-
-    def getParamFromFormula(FormulaValue:str, respValue:str, arralist:List[Response]):
-        length = len(FormulaValue.split("B"))
-
-        for i in range(length):
-            FormulaValue = FormulaValue.replace(" ", "")
-            indexOf = FormulaValue.find("B[")
-            if indexOf < 0:
-                break
-            substring = FormulaValue[indexOf:Run_request.GetEndBTagIndex(indexOf, FormulaValue)]
-            FormulaValue = FormulaValue.replace(substring, Run_request.getValueExp_2(substring, respValue))
-        
-        if App.GetIndexFormFormula(FormulaValue, "PIDOF") > -1:
-            FormulaValue = Run_request.make_expression_WithPIDOF(arralist, FormulaValue)
-        
-        FormulaValue = Run_request.getValueFromCondition(FormulaValue, respValue)
-        return FormulaValue
-
 
     def ReadValueFromHex(request:Request, str1:str):
         make_exp = Run_request.make_expression(request.cmd_formula, str1, Commandtype.cmd_ReadHex_12, [])
@@ -588,6 +595,7 @@ class Run_request:
                     elif request.cmd_type in [Commandtype.cmd_GetValue_Configuration_14, Commandtype.cmd_AvgParam, Commandtype.cmd_Param_2, Commandtype.cmd_AllDecimal_13]:
                         if not request.cmd_formula == "":
                             responce.value = self.calc_formula(Run_request.make_expression(request.cmd_formula, responce.mainValue, request.cmd_type, arrayList2), request.cmd_decmin)
+                            #responce.value = calc_equation(responce.mainValue, request.cmd_formula, request.cmd_type, request.cmd_decmin)
                             responce.netValue = responce.value
                             if request.isporp == 1:
                                 responce.value = Run_request.getCmdPropName(request.cmd_proplist, App.to_int(responce.value))
